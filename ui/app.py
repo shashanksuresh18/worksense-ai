@@ -20,15 +20,25 @@ except Exception as e:
 
 st.markdown("---")
 
+# ---------------- Target role selection ----------------
+st.header("🎯 Choose your target role")
+
+target_role = st.selectbox(
+    "Target Role",
+    ["Founding Engineer", "Applied AI Engineer"],
+    index=0,
+)
+
+st.markdown("---")
+
 # ---------------- Resume upload section ----------------
 st.header("📄 Upload your Resume")
 
 uploaded_file = st.file_uploader("Upload PDF Resume", type=["pdf"])
 
 if uploaded_file:
-    st.info("Sending resume to API for text extraction...")
+    st.info(f"Sending resume to API for analysis as '{target_role}'...")
 
-    # Build the 'files' payload for FastAPI
     files = {
         "file": (
             uploaded_file.name,
@@ -36,17 +46,33 @@ if uploaded_file:
             "application/pdf",
         )
     }
+    data = {"target_role": target_role}
 
     try:
-        res = requests.post(f"{API_BASE}/upload_resume", files=files)
+        res = requests.post(f"{API_BASE}/upload_resume", files=files, data=data)
 
         if res.status_code == 200:
             data = res.json()
+
             if "text" in data:
                 st.success("✅ Resume processed successfully!")
-                st.subheader("Extracted Text:")
-                # Use st.text for raw text (better for large chunks)
-                st.text(data["text"][:8000])  # show first ~8000 chars
+
+                st.subheader("Detected Skills:")
+                skills = data.get("skills", [])
+                if skills:
+                    st.write(", ".join(skills))
+                else:
+                    st.warning("No skills detected (keyword list is still simple).")
+
+                st.subheader(f"Missing Skills for {target_role}:")
+                missing = data.get("missing_skills", [])
+                if missing:
+                    st.write(", ".join(missing))
+                else:
+                    st.success("You already match this role's skill template! 🎉")
+
+                st.subheader("Extracted Text (first part):")
+                st.text(data["text"][:8000])
             else:
                 st.error(f"API did not return text. Response: {data}")
         else:
