@@ -57,19 +57,25 @@ if uploaded_file:
             if "text" in data:
                 st.success("✅ Resume processed successfully!")
 
-                st.subheader("Detected Skills:")
                 skills = data.get("skills", [])
+                missing = data.get("missing_skills", [])
+                advice = data.get("advice", "")
+
+                st.subheader("Detected Skills:")
                 if skills:
                     st.write(", ".join(skills))
                 else:
                     st.warning("No skills detected (keyword list is still simple).")
 
                 st.subheader(f"Missing Skills for {target_role}:")
-                missing = data.get("missing_skills", [])
                 if missing:
                     st.write(", ".join(missing))
                 else:
                     st.success("You already match this role's skill template! 🎉")
+
+                if advice:
+                    st.subheader("💡 AI Career Summary & Next Steps")
+                    st.markdown(advice)
 
                 st.subheader("Extracted Text (first part):")
                 st.text(data["text"][:8000])
